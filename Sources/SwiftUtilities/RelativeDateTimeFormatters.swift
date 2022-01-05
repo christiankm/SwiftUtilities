@@ -7,7 +7,7 @@
 
 import Foundation
 
-@available(macOS 10.15, *)
+@available(macOS 10.15, iOS 13.0, *)
 extension RelativeDateTimeFormatter {
 
     public class func full(_ date: Date) -> String {

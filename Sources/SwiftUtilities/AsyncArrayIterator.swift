@@ -7,19 +7,19 @@
 
 import Foundation
 
-struct AsyncArrayIterator<T>: AsyncSequence, AsyncIteratorProtocol {
+public struct AsyncArrayIterator<T>: AsyncSequence, AsyncIteratorProtocol {
 
-    typealias Element = T
+    public typealias Element = T
 
-    let elements: [Element]
+    public let elements: [Element]
     private var index = 0
 
-    init(elements: [T]) {
+    public init(elements: [T]) {
         self.elements = elements
     }
 
     @available(macOS 10.15.0, *)
-    mutating func next() async throws -> Element? {
+    public mutating func next() async throws -> Element? {
         guard !Task.isCancelled,
               index <= elements.count - 1 else { return nil }
 
@@ -28,7 +28,7 @@ struct AsyncArrayIterator<T>: AsyncSequence, AsyncIteratorProtocol {
         return result
     }
 
-    func makeAsyncIterator() -> AsyncArrayIterator {
+    public func makeAsyncIterator() -> AsyncArrayIterator {
         self
     }
 }

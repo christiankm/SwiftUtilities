@@ -7,6 +7,7 @@
 
 import Foundation
 
+@available(macOS 10.15, iOS 13.0, *)
 public struct AsyncArrayIterator<T>: AsyncSequence, AsyncIteratorProtocol {
 
     public typealias Element = T
@@ -18,7 +19,6 @@ public struct AsyncArrayIterator<T>: AsyncSequence, AsyncIteratorProtocol {
         self.elements = elements
     }
 
-    @available(macOS 10.15.0, *)
     public mutating func next() async throws -> Element? {
         guard !Task.isCancelled,
               index <= elements.count - 1 else { return nil }

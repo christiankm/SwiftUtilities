@@ -1,6 +1,6 @@
 //
 //  Collection+IsNotEmpty.swift
-//  
+//
 //
 //  Created by Christian Mitteldorf on 10/12/2022.
 //

@@ -9,13 +9,13 @@ import Foundation
 
 /// A controller that parses and manages type-safe launch arguments.
 ///
-/// Define your launch arguments as a `String`-backed enum conforming to `LaunchArgumentType`,
+/// Define your launch arguments as a `String`-backed enum conforming to `LaunchArgument`,
 /// then create a controller instance. Arguments parsed from `CommandLine.arguments` at
 /// initialisation time are immediately available, and you can also enable or disable arguments
 /// at run-time.
 ///
 /// ```swift
-/// enum AppLaunchArgument: String, LaunchArgumentType {
+/// enum AppLaunchArgument: String, LaunchArgument {
 ///     case resetDatabase
 ///     case disableAnimations
 /// }
@@ -26,7 +26,7 @@ import Foundation
 ///     // Perform database reset
 /// }
 /// ```
-public class LaunchArgumentsController<T: LaunchArgumentType>: @unchecked Sendable {
+public class LaunchArgumentsController<T: LaunchArgument>: @unchecked Sendable {
 
     private var storage = Set<T>()
     private let lock = NSLock()

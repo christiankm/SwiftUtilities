@@ -6,71 +6,72 @@
 //
 
 import SwiftUtilities
-import XCTest
+import Testing
 
-private enum TestLaunchArgument: String, LaunchArgumentType {
+private enum TestLaunchArgument: String, LaunchArgument {
     case resetDatabase
     case disableAnimations
     case verboseLogging
 }
 
-final class LaunchArgumentTests: XCTestCase {
+@Suite("LaunchArgumentsController")
+struct LaunchArgumentTests {
 
     // MARK: - Parsing from arguments array
 
-    func testParsesEnabledArgumentFromRawArguments() {
+    @Test func parsesEnabledArgumentFromRawArguments() {
         let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: ["resetDatabase"])
-        XCTAssertTrue(sut.isEnabled(.resetDatabase))
+        #expect(sut.isEnabled(.resetDatabase))
     }
 
-    func testDoesNotEnableAbsentArgument() {
+    @Test func doesNotEnableAbsentArgument() {
         let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: ["resetDatabase"])
-        XCTAssertFalse(sut.isEnabled(.disableAnimations))
+        #expect(!sut.isEnabled(.disableAnimations))
     }
 
-    func testParsesMultipleArgumentsFromRawArguments() {
+    @Test func parsesMultipleArgumentsFromRawArguments() {
         let sut = LaunchArgumentsController<TestLaunchArgument>(
             arguments: ["resetDatabase", "disableAnimations"]
         )
-        XCTAssertTrue(sut.isEnabled(.resetDatabase))
-        XCTAssertTrue(sut.isEnabled(.disableAnimations))
+        #expect(sut.isEnabled(.resetDatabase))
+        #expect(sut.isEnabled(.disableAnimations))
     }
 
-    func testEmptyArgumentsResultsInNoneEnabled() {
+    @Test func emptyArgumentsResultsInNoneEnabled() {
         let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: [])
-        XCTAssertFalse(sut.isEnabled(.resetDatabase))
-        XCTAssertFalse(sut.isEnabled(.disableAnimations))
+        #expect(!sut.isEnabled(.resetDatabase))
+        #expect(!sut.isEnabled(.disableAnimations))
     }
 
-    func testUnknownArgumentsAreIgnored() {
+    @Test func unknownArgumentsAreIgnored() {
         let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: ["-unknownFlag", "otherThing"])
-        XCTAssertFalse(sut.isEnabled(.resetDatabase))
+        #expect(!sut.isEnabled(.resetDatabase))
     }
 
-    func testDashPrefixedArgumentDoesNotMatchRawValue() {
+    @Test func dashPrefixedArgumentDoesNotMatchRawValue() {
         // Enum raw values are plain strings (e.g. "resetDatabase"), so a dash-prefixed
         // variant ("-resetDatabase") must not be treated as a match.
         let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: ["-resetDatabase"])
-        XCTAssertFalse(sut.isEnabled(.resetDatabase))
+        #expect(!sut.isEnabled(.resetDatabase))
     }
 
     // MARK: - Runtime enable / disable
 
-    func testEnableAddsArgument() {
+    @Test func enableAddsArgument() {
         let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: [])
         sut.enable(.verboseLogging)
-        XCTAssertTrue(sut.isEnabled(.verboseLogging))
+        #expect(sut.isEnabled(.verboseLogging))
     }
 
-    func testDisableRemovesArgument() {
+    @Test func disableRemovesArgument() {
         let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: ["verboseLogging"])
         sut.disable(.verboseLogging)
-        XCTAssertFalse(sut.isEnabled(.verboseLogging))
+        #expect(!sut.isEnabled(.verboseLogging))
     }
 
-    func testDisableOnNonEnabledArgumentDoesNothing() {
+    @Test func disableOnNonEnabledArgumentDoesNothing() {
         let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: [])
         sut.disable(.verboseLogging)
-        XCTAssertFalse(sut.isEnabled(.verboseLogging))
+        #expect(!sut.isEnabled(.verboseLogging))
     }
 }

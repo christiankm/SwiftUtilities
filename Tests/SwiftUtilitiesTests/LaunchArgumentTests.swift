@@ -8,69 +8,69 @@
 import SwiftUtilities
 import XCTest
 
+private enum TestLaunchArgument: String, LaunchArgumentType {
+    case resetDatabase
+    case disableAnimations
+    case verboseLogging
+}
+
 final class LaunchArgumentTests: XCTestCase {
 
-    // MARK: - LaunchArgument
+    // MARK: - Parsing from arguments array
 
-    func testLaunchArgumentIsTrueWhenKeyIsPresent() {
-        @LaunchArgument("-resetDatabase", arguments: ["-resetDatabase", "-disableAnimations"])
-        var sut: Bool
-        XCTAssertTrue(sut)
+    func testParsesEnabledArgumentFromRawArguments() {
+        let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: ["resetDatabase"])
+        XCTAssertTrue(sut.isEnabled(.resetDatabase))
     }
 
-    func testLaunchArgumentIsFalseWhenKeyIsAbsent() {
-        @LaunchArgument("-resetDatabase", arguments: ["-disableAnimations"])
-        var sut: Bool
-        XCTAssertFalse(sut)
+    func testDoesNotEnableAbsentArgument() {
+        let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: ["resetDatabase"])
+        XCTAssertFalse(sut.isEnabled(.disableAnimations))
     }
 
-    func testLaunchArgumentIsFalseWhenArgumentsListIsEmpty() {
-        @LaunchArgument("-resetDatabase", arguments: [])
-        var sut: Bool
-        XCTAssertFalse(sut)
+    func testParsesMultipleArgumentsFromRawArguments() {
+        let sut = LaunchArgumentsController<TestLaunchArgument>(
+            arguments: ["resetDatabase", "disableAnimations"]
+        )
+        XCTAssertTrue(sut.isEnabled(.resetDatabase))
+        XCTAssertTrue(sut.isEnabled(.disableAnimations))
     }
 
-    // MARK: - LaunchArgumentValue
-
-    func testLaunchArgumentValueReturnsStoredValue() {
-        let userDefaults = UserDefaults(suiteName: #function)!
-        userDefaults.set("https://staging.example.com", forKey: "serverURL")
-
-        @LaunchArgumentValue("serverURL", defaultValue: "https://api.example.com", userDefaults: userDefaults)
-        var sut: String
-        XCTAssertEqual(sut, "https://staging.example.com")
-
-        userDefaults.removePersistentDomain(forName: #function)
+    func testEmptyArgumentsResultsInNoneEnabled() {
+        let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: [])
+        XCTAssertFalse(sut.isEnabled(.resetDatabase))
+        XCTAssertFalse(sut.isEnabled(.disableAnimations))
     }
 
-    func testLaunchArgumentValueReturnsDefaultValueWhenKeyIsAbsent() {
-        let userDefaults = UserDefaults(suiteName: #function)!
-
-        @LaunchArgumentValue("serverURL", defaultValue: "https://api.example.com", userDefaults: userDefaults)
-        var sut: String
-        XCTAssertEqual(sut, "https://api.example.com")
-
-        userDefaults.removePersistentDomain(forName: #function)
+    func testUnknownArgumentsAreIgnored() {
+        let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: ["-unknownFlag", "otherThing"])
+        XCTAssertFalse(sut.isEnabled(.resetDatabase))
     }
 
-    func testLaunchArgumentValueWithIntegerType() {
-        let userDefaults = UserDefaults(suiteName: #function)!
-        userDefaults.set(5, forKey: "maxRetries")
-
-        @LaunchArgumentValue("maxRetries", defaultValue: 3, userDefaults: userDefaults)
-        var sut: Int
-        XCTAssertEqual(sut, 5)
-
-        userDefaults.removePersistentDomain(forName: #function)
+    func testDashPrefixedArgumentDoesNotMatchRawValue() {
+        // Enum raw values are plain strings (e.g. "resetDatabase"), so a dash-prefixed
+        // variant ("-resetDatabase") must not be treated as a match.
+        let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: ["-resetDatabase"])
+        XCTAssertFalse(sut.isEnabled(.resetDatabase))
     }
 
-    func testLaunchArgumentValueWithIntegerDefaultValue() {
-        let userDefaults = UserDefaults(suiteName: #function)!
+    // MARK: - Runtime enable / disable
 
-        @LaunchArgumentValue("maxRetries", defaultValue: 3, userDefaults: userDefaults)
-        var sut: Int
-        XCTAssertEqual(sut, 3)
+    func testEnableAddsArgument() {
+        let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: [])
+        sut.enable(.verboseLogging)
+        XCTAssertTrue(sut.isEnabled(.verboseLogging))
+    }
 
-        userDefaults.removePersistentDomain(forName: #function)
+    func testDisableRemovesArgument() {
+        let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: ["verboseLogging"])
+        sut.disable(.verboseLogging)
+        XCTAssertFalse(sut.isEnabled(.verboseLogging))
+    }
+
+    func testDisableOnNonEnabledArgumentDoesNothing() {
+        let sut = LaunchArgumentsController<TestLaunchArgument>(arguments: [])
+        sut.disable(.verboseLogging)
+        XCTAssertFalse(sut.isEnabled(.verboseLogging))
     }
 }

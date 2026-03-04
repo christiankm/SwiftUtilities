@@ -7,36 +7,15 @@
 
 import Foundation
 
-/// A property wrapper that provides type-safe access to a boolean launch argument flag.
+/// A protocol that describes a type used as a launch argument.
 ///
-/// A flag is considered active when its key is present in the process arguments.
+/// Conform an enum whose `RawValue` is `String` to `LaunchArgumentType` and pass it to
+/// `LaunchArgumentsController` for type-safe argument parsing.
 ///
-/// Usage:
 /// ```swift
-/// struct LaunchArguments {
-///     @LaunchArgument("-resetDatabase")
-///     static var resetDatabase: Bool
-///
-///     @LaunchArgument("-disableAnimations")
-///     static var disableAnimations: Bool
-/// }
-///
-/// if LaunchArguments.resetDatabase {
-///     // Reset the database
+/// enum AppLaunchArgument: String, LaunchArgumentType {
+///     case resetDatabase
+///     case disableAnimations
 /// }
 /// ```
-@propertyWrapper
-public struct LaunchArgument {
-
-    public let key: String
-    private let arguments: [String]
-
-    public init(_ key: String, arguments: [String] = ProcessInfo.processInfo.arguments) {
-        self.key = key
-        self.arguments = arguments
-    }
-
-    public var wrappedValue: Bool {
-        arguments.contains(key)
-    }
-}
+public protocol LaunchArgumentType: RawRepresentable, Hashable where RawValue == String {}

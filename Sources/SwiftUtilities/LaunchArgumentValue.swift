@@ -7,39 +7,52 @@
 
 import Foundation
 
-/// A property wrapper that provides type-safe access to a typed launch argument value.
+/// A controller that parses and manages type-safe launch arguments.
 ///
-/// Values are passed as launch arguments using the `-key value` convention,
-/// which makes them accessible via `UserDefaults`. When the app is launched with
-/// `-serverURL https://api.example.com` as a launch argument, you can read the
-/// value in a type-safe manner using this property wrapper.
+/// Define your launch arguments as a `String`-backed enum conforming to `LaunchArgumentType`,
+/// then create a controller instance. Arguments parsed from `CommandLine.arguments` at
+/// initialisation time are immediately available, and you can also enable or disable arguments
+/// at run-time.
 ///
-/// Usage:
 /// ```swift
-/// struct LaunchArguments {
-///     @LaunchArgumentValue("-serverURL", defaultValue: "https://api.example.com")
-///     static var serverURL: String
-///
-///     @LaunchArgumentValue("-maxRetries", defaultValue: 3)
-///     static var maxRetries: Int
+/// enum AppLaunchArgument: String, LaunchArgumentType {
+///     case resetDatabase
+///     case disableAnimations
 /// }
 ///
-/// let url = LaunchArguments.serverURL
+/// let arguments = LaunchArgumentsController<AppLaunchArgument>()
+///
+/// if arguments.isEnabled(.resetDatabase) {
+///     // Perform database reset
+/// }
 /// ```
-@propertyWrapper
-public struct LaunchArgumentValue<T> {
+public class LaunchArgumentsController<T: LaunchArgumentType>: @unchecked Sendable {
 
-    public let key: String
-    public let defaultValue: T
-    private let userDefaults: UserDefaults
+    private var storage = Set<T>()
+    private let lock = NSLock()
 
-    public init(_ key: String, defaultValue: T, userDefaults: UserDefaults = .standard) {
-        self.key = key
-        self.defaultValue = defaultValue
-        self.userDefaults = userDefaults
+    /// Creates a controller by parsing the supplied argument strings.
+    ///
+    /// - Parameter arguments: The raw argument strings to parse. Defaults to `CommandLine.arguments`.
+    public init(arguments: [String] = CommandLine.arguments) {
+        for argument in arguments {
+            guard let launchArgument = T(rawValue: argument) else { continue }
+            storage.insert(launchArgument)
+        }
     }
 
-    public var wrappedValue: T {
-        userDefaults.object(forKey: key) as? T ?? defaultValue
+    /// Enables a launch argument at run-time.
+    public func enable(_ launchArgument: T) {
+        lock.withLock { storage.insert(launchArgument) }
+    }
+
+    /// Disables a launch argument at run-time.
+    public func disable(_ launchArgument: T) {
+        lock.withLock { storage.remove(launchArgument) }
+    }
+
+    /// Returns `true` if the given launch argument is currently enabled.
+    public func isEnabled(_ launchArgument: T) -> Bool {
+        lock.withLock { storage.contains(launchArgument) }
     }
 }

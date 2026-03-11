@@ -15,7 +15,7 @@ private enum TestLaunchArgument: String, LaunchArgument {
 }
 
 @Suite("LaunchArgumentsController")
-struct LaunchArgumentTests {
+struct LaunchArgumentsControllerTests {
 
     // MARK: - Parsing from arguments array
 
